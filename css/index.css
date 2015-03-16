@@ -1,0 +1,200 @@
+@import url(http://fonts.googleapis.com/css?family=Audiowide);
+
+*{
+}
+
+a{
+	text-decoration: none;
+}
+
+body{
+	font-family: "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
+}
+
+a{
+	font-size: 10px;
+	margin: 2px;
+	margin-left: 10px;
+}
+
+
+#page{
+	width: 1012px;
+	margin: 0 auto;
+}
+
+#topBox{
+	margin: 5px;
+}
+
+#pageBody{
+	/*background-color: lightgray;*/
+	/*padding: 10px;*/
+}
+
+#pageBody:after{
+	content: "";
+	clear: both;
+	display:block;
+}
+
+#centerBox{
+	float: right;
+	margin: 0px;
+	padding: 0px;
+}
+
+#menuBox{
+	float: left;
+	width: 205px;
+}
+
+/* topBoxの中身 */
+#appP{
+	margin: 0;
+}
+
+#appTitle{
+	font-family: 'Audiowide', cursive;
+	font-size: 40px;
+	color: #404040;
+	margin: 0;
+}
+
+#version{
+	margin-left: 10px;
+}
+
+#concept{
+	margin-left: 10px;
+}
+
+
+/* centerBoxの中身 */
+#viewerBox{
+	padding: 0px;
+	margin: 0px;
+}
+
+#mViewCanvas {
+	border: ridge #404040;
+/*background-color: white;*/
+	/* 
+		canvasの幅はhtmlファイルで指定する 
+		CSSに記述すると拡大描画されてしまう
+		原因未特定
+	*/
+}
+
+/* 自動生成されるwebglの要素のスタイル */
+#webgl{
+	border: ridge #404040;
+	background-color: white;
+	margin: 0px;
+}
+
+
+#modeMessage{
+	margin: 0px;
+}
+
+.messageBox{
+	margin: 0px;
+}
+
+.messageDiv{
+	padding: 2px 10px;
+	border: dotted #404040 1px;
+	width: 783px;
+}
+
+
+/* menuBoxの中身 */
+
+.settingItemUpper{
+	width: 199px;
+	margin: 2px;
+	padding: 0px;
+	border: solid gray 1px;
+}
+
+#imgCheckBox{
+	margin: 2px;
+}
+
+#uploadFile{
+	font-size: 9px;
+	width: 190px;
+	margin: 2px;
+}
+
+.funcButton{
+	margin: 2px;
+	font-size: 1.2em;
+	padding: 5px 20px;
+	background-color: #404040;
+	color: #fff;
+	border-style: none;
+	width: 200px;
+}
+
+/*
+.funcButton:hover {
+	background-color: #808080;
+	color: #fff;
+}
+*/
+
+#saveDiv{
+	display:none;
+	padding: 0px;
+	margin: 0px;
+}
+
+#downloadDiv{
+	display:none;
+	padding: 0px;
+}
+
+#downloadLink{
+	margin: 0px;
+}
+
+#thicknessBox{
+	text-align: right;
+	width: 30px;
+}
+
+#gridCheckBox{
+	margin: 2px;
+}
+
+#detail {
+	padding: 2px;
+}
+
+.settingCaption{
+	font-size: 12px;
+	margin: 0px;
+}
+
+.settingMemo{
+	font-size: 8px;
+	margin: 0px;
+}
+
+.settingItem{
+	margin: 2px;
+	padding: 5px;
+	border: solid gray 1px;
+}
+
+/* 更新情報 */
+#updateBox{
+	margin-top: 20px;
+	border-top: solid gray 1px;
+}
+
+#updateBox h2{
+	font-size: 20px;
+}

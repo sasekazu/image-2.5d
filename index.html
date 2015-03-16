@@ -1,0 +1,104 @@
+﻿<!--
+	ソースに興味がありますか？
+	githubでどうぞ
+	https://github.com/sasekazu/2.5D-Mesher
+	-->
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<title>Img 2.5d</title>
+	<link rel="stylesheet" type="text/css" href="css/normalize.css" />
+	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/smoothness/jquery-ui.css" />
+	<link rel="stylesheet" type="text/css" href="css/index.css" />
+
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
+	<!-- グローバル変数 -->
+	<script type="text/javascript" src="js/parameters.js"></script>
+	<!-- メッシュ生成関係 -->
+	<script type="text/javascript" src="js/numeric-1.2.6.min.js"></script>
+	<script type="text/javascript" src="js/outline.js"></script>
+	<script type="text/javascript" src="js/delaunay.js"></script>
+	<script type="text/javascript" src="js/Mesh25d.js"></script>
+	<script type="text/javascript" src="js/drawFunc.js"></script>
+	<!-- WebGL関係 -->
+	<script src="js/three.min.js"></script>
+	<script type="text/javascript" src="js/webgl.js"></script>
+	<!-- 画像処理関係 -->
+	<script type="text/javascript" src="js/imageProcessing.js"></script>
+	<!-- メイン処理 -->
+	<script type="text/javascript" src="js/main.js"></script>
+</head>
+<body>
+	<div id="page">
+		<header>
+			<div id="topBox">
+				<p id="appP"><a href="index.html"><span id="appTitle">Img 2.5d</span></a>
+					<span id="concept">輪郭線から3Dデータ（STL形式）を作成</span>
+				</p>			
+			</div><!-- 終了 #topBox --->
+		</header>
+
+		<div id="pageBody">
+
+		<div id="menuBox">
+			<div class="settingItemUpper">
+				<label><input id="imgCheckBox" type="checkbox">画像表示</label>
+				<input id="uploadFile" name="image" type="file"/>
+			</div>
+			<input class="funcButton" id="resetButton" value="リセット" type="button" /><br />
+			<div id="saveDiv">
+				<input class="funcButton" id="3dButton" value="4. ３Ｄ表示　　" type="button" />
+				<input class="funcButton" id="saveButton" value="5. 保存　　　　" type="button" />
+				<div id="downloadDiv">
+					<a id="downloadLink">厚み <span id="thicknessDownload"></span> [mm] の3Dデータをダウンロード（右クリックから保存し，拡張子をstlに変えてください．）</a>
+				</div>
+			</div><!-- 終了 #saveDiv -->
+			<div id="detail">
+				<div class="settingItem">
+					<p class="settingCaption">厚み</p>
+					<p class="settingMemo"><input id="thicknessBox" type="text" value="5" name="thickness"><span>[mm]</span> 「保存」ボタンを押したときに反映される．</p>
+				</div>
+				<div class="settingItem">
+					<p class="settingCaption">二値化の閾値: <span id="imgThresioldSpan"></span> [px]</p>
+					<div id="imgThresioldSlider"></div>
+				</div>
+				<div class="settingItem">
+					<p class="settingCaption"><label><input id="gridCheckBox" type="checkbox" checked>10mmグリッド表示</label></p>
+				</div>
+				<div class="settingItem">
+					<p class="settingCaption">輪郭細かさ: <span id="minlenSpan"></span> [px]</p>
+					<div id="minlenSlider"></div>
+					<p class="settingMemo">※細かすぎると修正が大変になるので注意</p>
+				</div>
+				<div class="settingItem">
+					<p class="settingCaption">輪郭太さ: <span id="outlineWidthSpan"></span> [px]</p>
+					<div id="outlineWidthSlider"></div>
+				</div>
+				<div class="settingItem">
+					<p class="settingCaption">画像拡大倍率: <span id="imgScSpan"></span></p>
+					<div id="imgScSlider"></div>
+					<p class="settingMemo">※読み込み時は高さがちょうど窓に収まる大きさに調整される</p>
+				</div>
+				<div class="settingItem">
+					<p class="settingCaption">出力スケール: <span id="scaleSpan"></span> [mm/px]</p>
+					<div id="scaleSlider"></div>
+					<p class="settingMemo">※保存時に参照されるパラメータ．グリッド1マスが10mmになるような3Dデータが作成される．</p>
+				</div>
+			</div><!-- 終了 #detail -->
+		</div><!-- 終了 #menuBox -->
+
+
+		<div id="centerBox">
+			<div id="viewerBox"><canvas id="mViewCanvas" width="100" height="100"></canvas></div>
+			<div id="webglBox"></div>
+			<div class="messageDiv"><p class="messageBox"><span id="modeMessage"></span></p></div>
+		</div><!-- 終了 #centerBox -->
+
+		</div><!-- 終了 #pageBody -->
+
+	</div><!-- 終了 #page -->
+</body>
+</html>
