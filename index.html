@@ -18,9 +18,8 @@
 	<!-- グローバル変数 -->
 	<script type="text/javascript" src="js/parameters.js"></script>
 	<!-- メッシュ生成関係 -->
+	<script type="text/javascript" src="js/cdt-0.1.min.js"></script>
 	<script type="text/javascript" src="js/numeric-1.2.6.min.js"></script>
-	<script type="text/javascript" src="js/outline.js"></script>
-	<script type="text/javascript" src="js/delaunay.js"></script>
 	<script type="text/javascript" src="js/Mesh25d.js"></script>
 	<script type="text/javascript" src="js/drawFunc.js"></script>
 	<!-- WebGL関係 -->
@@ -45,12 +44,9 @@
 
 		<div id="menuBox">
 			<div class="settingItemUpper">
-				<label><input id="imgCheckBox" type="checkbox">画像表示</label>
 				<input id="uploadFile" name="image" type="file"/>
 			</div>
-			<input class="funcButton" id="resetButton" value="リセット" type="button" /><br />
 			<div id="saveDiv">
-				<input class="funcButton" id="3dButton" value="4. ３Ｄ表示　　" type="button" />
 				<input class="funcButton" id="saveButton" value="5. 保存　　　　" type="button" />
 				<div id="downloadDiv">
 					<a id="downloadLink">厚み <span id="thicknessDownload"></span> [mm] の3Dデータをダウンロード（右クリックから保存し，拡張子をstlに変えてください．）</a>
@@ -66,23 +62,6 @@
 					<div id="imgThresioldSlider"></div>
 				</div>
 				<div class="settingItem">
-					<p class="settingCaption"><label><input id="gridCheckBox" type="checkbox" checked>10mmグリッド表示</label></p>
-				</div>
-				<div class="settingItem">
-					<p class="settingCaption">輪郭細かさ: <span id="minlenSpan"></span> [px]</p>
-					<div id="minlenSlider"></div>
-					<p class="settingMemo">※細かすぎると修正が大変になるので注意</p>
-				</div>
-				<div class="settingItem">
-					<p class="settingCaption">輪郭太さ: <span id="outlineWidthSpan"></span> [px]</p>
-					<div id="outlineWidthSlider"></div>
-				</div>
-				<div class="settingItem">
-					<p class="settingCaption">画像拡大倍率: <span id="imgScSpan"></span></p>
-					<div id="imgScSlider"></div>
-					<p class="settingMemo">※読み込み時は高さがちょうど窓に収まる大きさに調整される</p>
-				</div>
-				<div class="settingItem">
 					<p class="settingCaption">出力スケール: <span id="scaleSpan"></span> [mm/px]</p>
 					<div id="scaleSlider"></div>
 					<p class="settingMemo">※保存時に参照されるパラメータ．グリッド1マスが10mmになるような3Dデータが作成される．</p>
@@ -92,9 +71,13 @@
 
 
 		<div id="centerBox">
-			<div id="viewerBox"><canvas id="mViewCanvas" width="100" height="100"></canvas></div>
+			<div id="viewerBox">
+			<canvas id="canvas1"></canvas>
+			<canvas id="canvas2"></canvas>
+			<canvas id="canvas3"></canvas>
+			<canvas id="canvas4"></canvas>
+			<canvas id="mViewCanvas" width="100" height="100"></canvas></div>
 			<div id="webglBox"></div>
-			<div class="messageDiv"><p class="messageBox"><span id="modeMessage"></span></p></div>
 		</div><!-- 終了 #centerBox -->
 
 		</div><!-- 終了 #pageBody -->
