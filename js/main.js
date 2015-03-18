@@ -53,9 +53,8 @@ $(document).ready(function () {
 		// キャンバスサイズ変更
 		canvas.attr("width", img.width);
 		canvas.attr("height", img.height);
-		canvasWidth = canvas.width();
-		canvasHeight = canvas.height();
-
+		canvasWidth = img.width;
+		canvasHeight = img.height;
 		/*
 		scale = 400 / img.width;
 		canvasWidth = Math.floor(scale * img.width);
@@ -101,7 +100,7 @@ $(document).ready(function () {
 		str += ']';
 		fileSave(str, 'boundary.txt');
 
-		cdtResult = cdt(boundary, [], {triSize: 'auto'});
+		cdtResult = cdt(boundary, []);
 
 		console.log(cdtResult);
 
