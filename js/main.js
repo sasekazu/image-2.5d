@@ -4,6 +4,15 @@
 /// <reference path="drawFunc.js" />
 
 
+function fileSave(text, filename){
+	var blob = new Blob([text],{"type" : "text/html"});
+	var newElement = document.createElement("a");
+	newElement.textContent= "download";
+	newElement.setAttribute('href', window.URL.createObjectURL(blob));
+	newElement.setAttribute('download', filename);
+	document.body.appendChild(newElement);
+}
+
 $(document).ready(function () {
 
 	// 2dコンテキストを取得
@@ -47,9 +56,11 @@ $(document).ready(function () {
 		canvasWidth = canvas.width();
 		canvasHeight = canvas.height();
 
+		/*
 		scale = 400 / img.width;
 		canvasWidth = Math.floor(scale * img.width);
 		canvasHeight = Math.floor(scale * img.height);
+		*/
 		for(var i = 0; i < canvas.length; ++i) {
 			canvas.attr("width", canvasWidth);
 			canvas.attr("height", canvasHeight);
@@ -79,8 +90,18 @@ $(document).ready(function () {
 		var boundary = mycontourDetection(context3, context4, canvasWidth, canvasHeight);
 
 		console.log(boundary);
+		var str = '[';
+		for(var i = 0; i < boundary.length; ++i) {
+			str += '[';
+			for(var j = 0; j < boundary[i].length; ++j) {
+				str += '[' + boundary[i][j][0] + ', ' + boundary[i][j][1] + '], ';
+			}
+			str += '], ';
+		}
+		str += ']';
+		fileSave(str, 'boundary.txt');
 
-		cdtResult = cdt(boundary, []);
+		cdtResult = cdt(boundary, [], {triSize: 'auto'});
 
 		console.log(cdtResult);
 
