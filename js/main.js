@@ -4,16 +4,58 @@
 /// <reference path="drawFunc.js" />
 
 
-function fileSave(text, filename){
-	var blob = new Blob([text],{"type" : "text/html"});
-	var newElement = document.createElement("a");
-	newElement.textContent= "download";
-	newElement.setAttribute('href', window.URL.createObjectURL(blob));
-	newElement.setAttribute('download', filename);
-	document.body.appendChild(newElement);
-}
+// スケーリング変数
+var mmperpixel = 0.15;
+
+// 画像描画関係
+var dx;
+var dy;
+var dw;
+var dh;
+
+// 二値化閾値
+var cutoff = 240;
+
 
 $(document).ready(function () {
+
+	var context1 = $("#canvas1").get(0).getContext("2d");
+	var context2 = $("#canvas2").get(0).getContext("2d");
+	var context3 = $("#canvas3").get(0).getContext("2d");
+	var context4 = $("#canvas4").get(0).getContext("2d");
+
+	// スライダの初期化 出力スケーリング変数mmperpixel
+	$("#scaleSlider").slider({
+		min: 0.05,
+		max: 0.3,
+		step: 0.01,
+		value: mmperpixel,
+		slide: function (event, ui) {
+			mmperpixel = ui.value;
+			document.getElementById('scaleSpan').innerHTML = mmperpixel;
+		}
+	});
+	document.getElementById('scaleSpan').innerHTML = mmperpixel;
+
+
+	// スライダの初期化 二値化閾値
+	$("#imgThresioldSlider").slider({
+		min: 0,
+		max: 255,
+		step: 1,
+		value: cutoff,
+		slide: function (event, ui) {
+			cutoff = ui.value;
+			document.getElementById('imgThresioldSpan').innerHTML = cutoff;
+			// 二値化
+			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
+		},
+		change: function (event, ui) {
+			update();
+		}
+	});
+	document.getElementById('imgThresioldSpan').innerHTML = cutoff;
+
 
 	// 2dコンテキストを取得
 	var canvas = $("#mViewCanvas");
@@ -48,18 +90,22 @@ $(document).ready(function () {
 		reader.readAsDataURL(file);
 	});
 
-	img.onload=function () {
+	img.onload = function () {
+
+		update();
+
+	}
+
+	function update() {
 		calcImgParameters();
 		// キャンバスサイズ変更
-		canvas.attr("width", img.width);
-		canvas.attr("height", img.height);
 		canvasWidth = img.width;
 		canvasHeight = img.height;
-		/*
-		scale = 400 / img.width;
+		scale = 300 / img.width;
 		canvasWidth = Math.floor(scale * img.width);
 		canvasHeight = Math.floor(scale * img.height);
-		*/
+		canvas.attr("width", canvasWidth);
+		canvas.attr("height", canvasHeight);
 		for(var i = 0; i < canvas.length; ++i) {
 			canvas.attr("width", canvasWidth);
 			canvas.attr("height", canvasHeight);
@@ -73,11 +119,6 @@ $(document).ready(function () {
 		$("#canvas2").attr("height", canvasHeight);
 		$("#canvas3").attr("height", canvasHeight);
 		$("#canvas4").attr("height", canvasHeight);
-
-		var context1 = $("#canvas1").get(0).getContext("2d");
-		var context2 = $("#canvas2").get(0).getContext("2d");
-		var context3 = $("#canvas3").get(0).getContext("2d");
-		var context4 = $("#canvas4").get(0).getContext("2d");
 
 		// 入力画像の描画
 		context1.drawImage(img, 0, 0, canvasWidth, canvasHeight);
@@ -100,7 +141,7 @@ $(document).ready(function () {
 		str += ']';
 		fileSave(str, 'boundary.txt');
 
-		cdtResult = cdt(boundary, []);
+		cdtResult = cdt(boundary, [], { softConstraint: false, cutoffLength: 2 });
 
 		console.log(cdtResult);
 
@@ -114,7 +155,6 @@ $(document).ready(function () {
 		var thickness = Number(v);
 		var vert = mesh25d.getPos(mmperpixel, thickness);
 		renderWebGL(canvasWidth, canvasHeight, mesh25d.modelLength, mesh25d.modelTop, mesh25d.modelBottom, vert, mesh25d.tri);
-
 	}
 
 	calcImgParameters = function(){
@@ -137,13 +177,13 @@ $(document).ready(function () {
 		context.clearRect(0, 0, canvasWidth, canvasHeight);
 		// 全体の写真を描画
 		context.globalAlpha = 0.7;
-		context.drawImage(img, dx, dy, dw, dh);
+		//context.drawImage(img, dx, dy, dw, dh);
 		context.globalAlpha = 1.0;
 		// メッシュの描画
 		///context.strokeStyle='gray';
-		context.strokeStyle='lightseagreen';
-		context.fillStyle='lightseagreen';
-		context.globalAlpha = 0.7;
+		context.strokeStyle='black';
+		context.fillStyle='lightyellow';
+		//context.globalAlpha = 0.7;
 		var points = cdtResult.points;
 		var conn = cdtResult.connectivity;
 		for(var i=0; i<conn.length; ++i) {
@@ -151,7 +191,7 @@ $(document).ready(function () {
 			drawTri(context, points[tri[0]], points[tri[1]], points[tri[2]]);
 			drawTriS(context, points[tri[0]], points[tri[1]], points[tri[2]]);
 		}
-		context.globalAlpha = 1.0;
+		//context.globalAlpha = 1.0;
 	}
 
 	//////////////////////////////////////////////////////////
@@ -384,4 +424,15 @@ function mycontourDetection(contextIn, contextOut, width, height) {
 	*/
 
 	return boundaryPxs;
+}
+
+
+
+function fileSave(text, filename) {
+	var blob = new Blob([text], { "type": "text/html" });
+	var newElement = document.createElement("a");
+	newElement.textContent = "download";
+	newElement.setAttribute('href', window.URL.createObjectURL(blob));
+	newElement.setAttribute('download', filename);
+	document.body.appendChild(newElement);
 }

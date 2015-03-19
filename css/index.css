@@ -39,7 +39,8 @@ a{
 }
 
 #centerBox{
-	float: right;
+	float: left;
+	width: 620px;
 	margin: 0px;
 	padding: 0px;
 }
@@ -77,7 +78,9 @@ a{
 }
 
 #mViewCanvas {
+	/*
 	border: ridge #404040;
+		*/
 /*background-color: white;*/
 	/* 
 		canvasの幅はhtmlファイルで指定する 
