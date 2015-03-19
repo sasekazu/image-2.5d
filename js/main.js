@@ -65,6 +65,7 @@ $(document).ready(function () {
 
 	// メッシュ作成用変数
 	var cdtResult;
+	var trueTri;
 
 	// 2.5次元メッシュ用変数
 	var mesh25d;
@@ -136,16 +137,32 @@ $(document).ready(function () {
 			for(var j = 0; j < boundary[i].length; ++j) {
 				str += '[' + boundary[i][j][0] + ', ' + boundary[i][j][1] + '], ';
 			}
-			str += '], ';
+			str += '], \n';
 		}
 		str += ']';
 		fileSave(str, 'boundary.txt');
 
-		cdtResult = cdt(boundary, [], { softConstraint: false, cutoffLength: 2 });
+		cdtResult = cdt(boundary, [], { softConstraint: true, cutoffLength: 2 });
 
-		console.log(cdtResult);
+		var tri = cdtResult.connectivity;
+		var points = cdtResult.points;
+		trueTri = [];
+		for(var i = 0; i < tri.length; ++i) {
+			var triCenter = numeric.add(points[tri[i][0]], points[tri[i][1]]);
+			triCenter = numeric.add(triCenter, points[tri[i][2]]);
+			triCenter = numeric.div(triCenter, 3);
+			if(isPointBlack(triCenter, context3, canvasWidth, canvasHeight)) {
+				trueTri.push(tri[i]);
+			}
+		}
 
-		mesh25d = new Mesh25d(cdtResult.points, cdtResult.connectivity);
+		function isPointBlack(p, contextIn, width, height) {
+			var imgData = contextIn.getImageData(0, 0, width, height);
+			var pPx = [Math.floor(p[0]), Math.floor(p[1])];
+			return (imgData.data[4 * (width * pPx[1] + pPx[0])] < 100);
+		}
+
+		mesh25d = new Mesh25d(cdtResult.points, trueTri);
 
 		hideAndRemoveSaveEle();
 
@@ -185,7 +202,7 @@ $(document).ready(function () {
 		context.fillStyle='lightyellow';
 		//context.globalAlpha = 0.7;
 		var points = cdtResult.points;
-		var conn = cdtResult.connectivity;
+		var conn = trueTri;
 		for(var i=0; i<conn.length; ++i) {
 			var tri=[conn[i][0], conn[i][1], conn[i][2]];
 			drawTri(context, points[tri[0]], points[tri[1]], points[tri[2]]);
@@ -341,15 +358,18 @@ function mycontourDetection(contextIn, contextOut, width, height) {
 				// 最初のピクセルに戻れば次の輪郭を探す
 				// 周囲の8ピクセルがすべて白ならば孤立点なので次の輪郭を探す
 				if(pxVal == 0) {
-					if(buf[sPx[0]][sPx[1]] == 0) {
-						duplicatedPx.push([sPx[0], sPx[1]]);
-					}
 					// 検出されたピクセルが輪郭追跡開始ピクセルならば
 					// 追跡を終了して次の輪郭に移る
 					if(sPx[0] == startPx[0] && sPx[1] == startPx[1]) {
 						isClosed = true;
 						break;
 					}
+					// すでに検出されているピクセルだった場合，
+					// ログを残す
+					if(buf[sPx[0]][sPx[1]] == 0) {
+						duplicatedPx.push([sPx[0], sPx[1]]);
+					}
+
 					buf[sPx[0]][sPx[1]] = 0; // 検出された点を黒にする
 					dPx[0] = sPx[0];
 					dPx[1] = sPx[1];
@@ -407,9 +427,9 @@ function mycontourDetection(contextIn, contextOut, width, height) {
 	contextOut.putImageData(imgData, 0, 0);
 
 	// 輪郭ごとに色を変えて描画する
-	/*
 	contextOut.clearRect(0, 0, width, height);
 	colors = ['red', 'green', 'blue', 'orange', 'purple', 'cyan'];
+	colors = ['black'];
 	for(var i = 0; i < boundaryPxs.length; ++i) {
 		contextOut.strokeStyle = colors[i % colors.length];
 		contextOut.beginPath();
@@ -421,7 +441,6 @@ function mycontourDetection(contextIn, contextOut, width, height) {
 		contextOut.stroke();
 	}
 	contextOut.strokeStyle = 'black';
-	*/
 
 	return boundaryPxs;
 }
