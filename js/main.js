@@ -51,7 +51,7 @@ $(document).ready(function () {
 			// 二値化
 			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
 			// 倍化
-			enlarge(context3, context4, canvasWidth, canvasHeight);
+			roughen(context3, context4, canvasWidth, canvasHeight);
 		},
 		change: function (event, ui) {
 			update();
@@ -105,22 +105,22 @@ $(document).ready(function () {
 		// キャンバスサイズ変更
 		canvasWidth = img.width;
 		canvasHeight = img.height;
-		scale = 100 / img.width;
+		scale = 300 / img.width;
 		canvasWidth = Math.floor(scale * img.width);
 		canvasHeight = Math.floor(scale * img.height);
-		canvas.attr("width", 2 * canvasWidth);
-		canvas.attr("height", 2 * canvasHeight);
+		canvas.attr("width", canvasWidth);
+		canvas.attr("height", canvasHeight);
 
 		$("#canvas1").attr("width", canvasWidth);
 		$("#canvas2").attr("width", canvasWidth);
 		$("#canvas3").attr("width", canvasWidth);
-		$("#canvas4").attr("width", 2 * canvasWidth);
-		$("#canvas5").attr("width", 2 * canvasWidth);
+		$("#canvas4").attr("width", canvasWidth);
+		$("#canvas5").attr("width", canvasWidth);
 		$("#canvas1").attr("height", canvasHeight);
 		$("#canvas2").attr("height", canvasHeight);
 		$("#canvas3").attr("height", canvasHeight);
-		$("#canvas4").attr("height", 2 * canvasHeight);
-		$("#canvas5").attr("height", 2 * canvasHeight);
+		$("#canvas4").attr("height", canvasHeight);
+		$("#canvas5").attr("height", canvasHeight);
 
 		// 入力画像の描画
 		context1.drawImage(img, 0, 0, canvasWidth, canvasHeight);
@@ -129,9 +129,9 @@ $(document).ready(function () {
 		// 二値化
 		mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
 		// 倍化
-		enlarge(context3, context4, canvasWidth, canvasHeight);
+		roughen(context3, context4, canvasWidth, canvasHeight);
 		// 輪郭追跡結果
-		var boundary = mycontourDetection(context4, context5, 2 * canvasWidth, 2 * canvasHeight);
+		var boundary = mycontourDetection(context4, context5, canvasWidth, canvasHeight);
 
 		/*
 		console.log(boundary);
@@ -156,7 +156,7 @@ $(document).ready(function () {
 			var triCenter = numeric.add(points[tri[i][0]], points[tri[i][1]]);
 			triCenter = numeric.add(triCenter, points[tri[i][2]]);
 			triCenter = numeric.div(triCenter, 3);
-			if(isPointBlack(triCenter, context4, 2*canvasWidth, 2*canvasHeight)) {
+			if(isPointBlack(triCenter, context4, canvasWidth, canvasHeight)) {
 				trueTri.push(tri[i]);
 			}
 		}
@@ -294,25 +294,21 @@ function mybinarization(contextIn, contextOut, width, height, threshold) {
 	contextOut.putImageData(imgData, 0, 0);
 }
 
-function enlarge(contextIn, contextOut, width, height) {
-	var imgDataIn = contextIn.getImageData(0, 0, width, height);
-	var imgDataOut = contextOut.getImageData(0, 0, 2 * width, 2 * height);
-	for(var wi = 0; wi < width; ++wi) {
-		for(var hi = 0; hi < height; ++hi) {
-			for(var i = 0; i < 4; ++i) {
-				imgDataOut.data[4 * (2 * width * (2 * hi + 0) + 2 * wi + 0) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
-				imgDataOut.data[4 * (2 * width * (2 * hi + 1) + 2 * wi + 0) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
-				imgDataOut.data[4 * (2 * width * (2 * hi + 0) + 2 * wi + 1) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
-				imgDataOut.data[4 * (2 * width * (2 * hi + 1) + 2 * wi + 1) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
-			}
-		}
-	}
 
-	for(var i = 0; i < imgDataOut.length; ++i) {
-		if(i % 4 == 3) {
-			imgDataOut[i] = 255;
-		} else {
-			imgDataOut[i] = 0;
+function roughen(contextIn, contextOut, width, height) {
+	var imgDataIn = contextIn.getImageData(0, 0, width, height);
+	var imgDataOut = contextOut.getImageData(0, 0, width, height);
+	var dotsize = 2;
+	for(var wi = 0; wi < width/dotsize; ++wi) {
+		for(var hi = 0; hi < height / dotsize; ++hi) {
+			for(var dwi = 0; dwi < dotsize; ++dwi) {
+				for(var dhi = 0; dhi < dotsize; ++dhi) {
+					for(var i = 0; i < 4; ++i) {
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + i]
+							= imgDataIn.data[4 * (width * dotsize * hi + dotsize * wi) + i];
+					}
+				}
+			}
 		}
 	}
 	contextOut.putImageData(imgDataOut, 0, 0);
