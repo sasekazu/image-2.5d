@@ -23,6 +23,7 @@ $(document).ready(function () {
 	var context2 = $("#canvas2").get(0).getContext("2d");
 	var context3 = $("#canvas3").get(0).getContext("2d");
 	var context4 = $("#canvas4").get(0).getContext("2d");
+	var context5 = $("#canvas5").get(0).getContext("2d");
 
 	// スライダの初期化 出力スケーリング変数mmperpixel
 	$("#scaleSlider").slider({
@@ -49,6 +50,8 @@ $(document).ready(function () {
 			document.getElementById('imgThresioldSpan').innerHTML = cutoff;
 			// 二値化
 			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
+			// 倍化
+			enlarge(context3, context4, canvasWidth, canvasHeight);
 		},
 		change: function (event, ui) {
 			update();
@@ -102,24 +105,22 @@ $(document).ready(function () {
 		// キャンバスサイズ変更
 		canvasWidth = img.width;
 		canvasHeight = img.height;
-		scale = 300 / img.width;
+		scale = 100 / img.width;
 		canvasWidth = Math.floor(scale * img.width);
 		canvasHeight = Math.floor(scale * img.height);
-		canvas.attr("width", canvasWidth);
-		canvas.attr("height", canvasHeight);
-		for(var i = 0; i < canvas.length; ++i) {
-			canvas.attr("width", canvasWidth);
-			canvas.attr("height", canvasHeight);
-		}
+		canvas.attr("width", 2 * canvasWidth);
+		canvas.attr("height", 2 * canvasHeight);
 
 		$("#canvas1").attr("width", canvasWidth);
 		$("#canvas2").attr("width", canvasWidth);
 		$("#canvas3").attr("width", canvasWidth);
-		$("#canvas4").attr("width", canvasWidth);
+		$("#canvas4").attr("width", 2 * canvasWidth);
+		$("#canvas5").attr("width", 2 * canvasWidth);
 		$("#canvas1").attr("height", canvasHeight);
 		$("#canvas2").attr("height", canvasHeight);
 		$("#canvas3").attr("height", canvasHeight);
-		$("#canvas4").attr("height", canvasHeight);
+		$("#canvas4").attr("height", 2 * canvasHeight);
+		$("#canvas5").attr("height", 2 * canvasHeight);
 
 		// 入力画像の描画
 		context1.drawImage(img, 0, 0, canvasWidth, canvasHeight);
@@ -127,9 +128,12 @@ $(document).ready(function () {
 		mygrayScale(context1, context2, canvasWidth, canvasHeight);
 		// 二値化
 		mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
+		// 倍化
+		enlarge(context3, context4, canvasWidth, canvasHeight);
 		// 輪郭追跡結果
-		var boundary = mycontourDetection(context3, context4, canvasWidth, canvasHeight);
+		var boundary = mycontourDetection(context4, context5, 2 * canvasWidth, 2 * canvasHeight);
 
+		/*
 		console.log(boundary);
 		var str = '[';
 		for(var i = 0; i < boundary.length; ++i) {
@@ -141,6 +145,7 @@ $(document).ready(function () {
 		}
 		str += ']';
 		fileSave(str, 'boundary.txt');
+		*/
 
 		cdtResult = cdt(boundary, [], { softConstraint: true, cutoffLength: 2 });
 
@@ -151,7 +156,7 @@ $(document).ready(function () {
 			var triCenter = numeric.add(points[tri[i][0]], points[tri[i][1]]);
 			triCenter = numeric.add(triCenter, points[tri[i][2]]);
 			triCenter = numeric.div(triCenter, 3);
-			if(isPointBlack(triCenter, context3, canvasWidth, canvasHeight)) {
+			if(isPointBlack(triCenter, context4, 2*canvasWidth, 2*canvasHeight)) {
 				trueTri.push(tri[i]);
 			}
 		}
@@ -191,7 +196,7 @@ $(document).ready(function () {
 	function meshCompleteFunc() {
 		// 描画リセット
 		context.setTransform(1, 0, 0, 1, 0, 0);
-		context.clearRect(0, 0, canvasWidth, canvasHeight);
+		context.clearRect(0, 0, 2* canvasWidth, 2*canvasHeight);
 		// 全体の写真を描画
 		context.globalAlpha = 0.7;
 		//context.drawImage(img, dx, dy, dw, dh);
@@ -288,6 +293,31 @@ function mybinarization(contextIn, contextOut, width, height, threshold) {
 	}
 	contextOut.putImageData(imgData, 0, 0);
 }
+
+function enlarge(contextIn, contextOut, width, height) {
+	var imgDataIn = contextIn.getImageData(0, 0, width, height);
+	var imgDataOut = contextOut.getImageData(0, 0, 2 * width, 2 * height);
+	for(var wi = 0; wi < width; ++wi) {
+		for(var hi = 0; hi < height; ++hi) {
+			for(var i = 0; i < 4; ++i) {
+				imgDataOut.data[4 * (2 * width * (2 * hi + 0) + 2 * wi + 0) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
+				imgDataOut.data[4 * (2 * width * (2 * hi + 1) + 2 * wi + 0) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
+				imgDataOut.data[4 * (2 * width * (2 * hi + 0) + 2 * wi + 1) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
+				imgDataOut.data[4 * (2 * width * (2 * hi + 1) + 2 * wi + 1) + i] = imgDataIn.data[4 * (width * hi + wi) + i];
+			}
+		}
+	}
+
+	for(var i = 0; i < imgDataOut.length; ++i) {
+		if(i % 4 == 3) {
+			imgDataOut[i] = 255;
+		} else {
+			imgDataOut[i] = 0;
+		}
+	}
+	contextOut.putImageData(imgDataOut, 0, 0);
+}
+
 // 輪郭追跡を行い，輪郭部のみに色を出力する
 function mycontourDetection(contextIn, contextOut, width, height) {
 	var imgData = contextIn.getImageData(0, 0, width, height);
@@ -427,6 +457,7 @@ function mycontourDetection(contextIn, contextOut, width, height) {
 	contextOut.putImageData(imgData, 0, 0);
 
 	// 輪郭ごとに色を変えて描画する
+	/*
 	contextOut.clearRect(0, 0, width, height);
 	colors = ['red', 'green', 'blue', 'orange', 'purple', 'cyan'];
 	colors = ['black'];
@@ -441,7 +472,7 @@ function mycontourDetection(contextIn, contextOut, width, height) {
 		contextOut.stroke();
 	}
 	contextOut.strokeStyle = 'black';
-
+	*/
 	return boundaryPxs;
 }
 
