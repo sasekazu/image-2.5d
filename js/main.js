@@ -52,7 +52,7 @@ $(document).ready(function () {
 			// 二値化
 			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
 			// 倍化
-			roughen(context3, context4, canvasWidth, canvasHeight);
+			roughen(context3, context4, canvasWidth, canvasHeight, 3);
 			// マニフォルドネス復帰
 			recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
 		},
@@ -106,7 +106,7 @@ $(document).ready(function () {
 	function update() {
 		calcImgParameters();
 		// キャンバスサイズ変更
-		var size_fixed = 400;
+		var size_fixed = 300;
 		if(img.width > img.height) {
 			scale = size_fixed / img.width;
 		} else {
@@ -137,13 +137,12 @@ $(document).ready(function () {
 		// 二値化
 		mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
 		// 倍化
-		roughen(context3, context4, canvasWidth, canvasHeight);
+		roughen(context3, context4, canvasWidth, canvasHeight, 3);
 		// マニフォルドネス復帰
 		recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
 		// 輪郭追跡結果
 		var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
 
-		return;
 
 		/*
 		console.log(boundary);
@@ -158,10 +157,28 @@ $(document).ready(function () {
 		str += ']';
 		fileSave(str, 'boundary.txt');
 		*/
-
+		/*
 		trueTri = null;
+		var culledBoundary = [];
+		for(var bi = 0; bi < boundary.length; ++bi) {
+			var boundaryToBeAdded = [];
+			var len = boundary[bi].length;
+			var ZERO = 1e-1;
+			for(var bj = 0; bj < len; ++bj) {
+				var v1 = cdt.sub(boundary[bi][bj], boundary[bi][(bj+len-1)%len]);
+				v1 = cdt.div(v1, cdt.norm2(v1));
+				var v2 = cdt.sub(boundary[bi][(bj+1)%len], boundary[bi][(bj+len-1)%len]);
+				v2 = cdt.div(v2, cdt.norm2(v2));
+				if(Math.abs(v1[0] * v2[0] + v2[1] * v2[1] - 1) > ZERO) {
+					boundaryToBeAdded.push(boundary[bi][bj]);
+				}
+			}
+			culledBoundary.push(boundaryToBeAdded);
+		}
+		boundary = cdt.clone(culledBoundary);
+		*/
 
-		cdtResult = cdt(boundary, [], { softConstraint: true, cutoffLength: 2 });
+		cdtResult = cdt(boundary, [], { merge: true, softConstraint: true, cutoffLength: 0 });
 
 		var tri = cdtResult.connectivity;
 		var points = cdtResult.points;
@@ -174,18 +191,21 @@ $(document).ready(function () {
 				trueTri.push(tri[i]);
 			}
 		}
-
 		function isPointBlack(p, contextIn, width, height) {
 			var imgData = contextIn.getImageData(0, 0, width, height);
 			var pPx = [Math.floor(p[0]), Math.floor(p[1])];
 			return (imgData.data[4 * (width * pPx[1] + pPx[0])] < 100);
 		}
 
+		meshCompleteFunc();
+
+
+
 		mesh25d = new Mesh25d(cdtResult.points, trueTri);
 
 		hideAndRemoveSaveEle();
 
-		meshCompleteFunc();
+		return;
 
 		var v = $("#thicknessBox").val();
 		var thickness = Number(v);
@@ -239,7 +259,7 @@ $(document).ready(function () {
 		var blob = new Blob([text],{"type" : "text/html"});
 		var a = document.getElementById('downloadLink');
 		a.setAttribute('href', window.URL.createObjectURL(blob));
-		a.setAttribute('target', '_blank');
+		a.setAttribute('download', '3d-model.stl');
 		document.getElementById('thicknessDownload').innerHTML=thickness;
 		$('#downloadDiv').show('slow');
 	});
@@ -251,8 +271,6 @@ $(document).ready(function () {
 		if(webglOldDom) {
 			oyadom.removeChild(webglOldDom);
 		}
-		$('#saveDiv').hide('slow');
-		$('#downloadDiv').hide('slow');
 	}
 
 } );
@@ -379,10 +397,9 @@ function recoverManifoldness(contextIn, contextOut, width, height) {
 // ローカル変数の dotsize (整数値) で粗さを指定する．大きいほど荒い．
 // contextInは二値化画像であることを想定する
 // dotsizeで指定したピクセル数の正方形の中で白or黒の多数派にすべて染める
-function roughen(contextIn, contextOut, width, height) {
+function roughen(contextIn, contextOut, width, height, dotsize) {
 	var imgDataIn = contextIn.getImageData(0, 0, width, height);
 	var imgDataOut = contextOut.getImageData(0, 0, width, height);
-	var dotsize = 3;
 	for(var wi = 0; wi < width/dotsize; ++wi) {
 		for(var hi = 0; hi < height / dotsize; ++hi) {
 			var sum_color = 0;
@@ -402,7 +419,9 @@ function roughen(contextIn, contextOut, width, height) {
 					if(dotsize * hi + dhi >= height || dotsize * wi + dwi >= width) {
 						continue;
 					}
-					if(sum_color >= 255 * (dotsize * dotsize - num_pixel_out_of_range) / 2) {
+					// 白が過半数以上なら白に
+					//if(sum_color > 255 * (dotsize * dotsize - num_pixel_out_of_range) / 2) {
+					if(sum_color == 255 * (dotsize * dotsize - num_pixel_out_of_range) ) {
 						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 0] = 255;
 						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 1] = 255;
 						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 2] = 255;

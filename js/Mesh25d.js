@@ -39,6 +39,18 @@ function Mesh25d(initpos, tri){
 
 
 Mesh25d.prototype.makeSurface = function(){
+
+	// triの格納順序を反時計回りにする
+	for(var i = 0; i < this.tri.length; ++i) {
+		var v1 = numeric.sub(this.pos2d[this.tri[i][1]], this.pos2d[this.tri[i][0]]);
+		var v2 = numeric.sub(this.pos2d[this.tri[i][2]], this.pos2d[this.tri[i][0]]);
+		if(v1[0] * v2[1] - v1[1] * v2[0] < 0) {
+			var tmp = this.tri[i][1];
+			this.tri[i][1] = this.tri[i][2];
+			this.tri[i][2] = tmp;
+		}
+	}
+
 	// nodeToTriの作成
 	this.nodeToTri = new Array(this.posNum2d);
 	for(var i=0; i<this.posNum2d; i++)
@@ -128,7 +140,7 @@ Mesh25d.prototype.make3d = function () {
 	for(var i=0; i<this.posNum2d; i++){
 		this.pos[i] = new Array(3);
 		this.pos[i][0] = this.pos2d[i][0]-center2d[0];
-		this.pos[i][1] = -this.pos2d[i][1]+center2d[1];
+		this.pos[i][1] = this.pos2d[i][1]-center2d[1];
 		this.pos[i][2] = 0.5;
 	}
 	for(var i=0; i<this.posNum2d; i++){
