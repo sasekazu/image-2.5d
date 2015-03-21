@@ -106,9 +106,12 @@ $(document).ready(function () {
 	function update() {
 		calcImgParameters();
 		// キャンバスサイズ変更
-		canvasWidth = img.width;
-		canvasHeight = img.height;
-		scale = 300 / img.width;
+		var size_fixed = 400;
+		if(img.width > img.height) {
+			scale = size_fixed / img.width;
+		} else {
+			scale = size_fixed / img.height;
+		}
 		canvasWidth = Math.floor(scale * img.width);
 		canvasHeight = Math.floor(scale * img.height);
 		canvas.attr("width", canvasWidth);
@@ -140,6 +143,8 @@ $(document).ready(function () {
 		// 輪郭追跡結果
 		var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
 
+		return;
+
 		/*
 		console.log(boundary);
 		var str = '[';
@@ -153,6 +158,8 @@ $(document).ready(function () {
 		str += ']';
 		fileSave(str, 'boundary.txt');
 		*/
+
+		trueTri = null;
 
 		cdtResult = cdt(boundary, [], { softConstraint: true, cutoffLength: 2 });
 
@@ -204,14 +211,10 @@ $(document).ready(function () {
 		// 描画リセット
 		context.setTransform(1, 0, 0, 1, 0, 0);
 		context.clearRect(0, 0, 2* canvasWidth, 2*canvasHeight);
-		// 全体の写真を描画
-		context.globalAlpha = 0.7;
-		//context.drawImage(img, dx, dy, dw, dh);
-		context.globalAlpha = 1.0;
 		// メッシュの描画
 		///context.strokeStyle='gray';
-		context.strokeStyle='black';
-		context.fillStyle='lightyellow';
+		context.strokeStyle='gray';
+		context.fillStyle='lightblue';
 		//context.globalAlpha = 0.7;
 		var points = cdtResult.points;
 		var conn = trueTri;
