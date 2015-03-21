@@ -24,6 +24,7 @@ $(document).ready(function () {
 	var context3 = $("#canvas3").get(0).getContext("2d");
 	var context4 = $("#canvas4").get(0).getContext("2d");
 	var context5 = $("#canvas5").get(0).getContext("2d");
+	var context6 = $("#canvas6").get(0).getContext("2d");
 
 	// スライダの初期化 出力スケーリング変数mmperpixel
 	$("#scaleSlider").slider({
@@ -52,6 +53,8 @@ $(document).ready(function () {
 			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
 			// 倍化
 			roughen(context3, context4, canvasWidth, canvasHeight);
+			// マニフォルドネス復帰
+			recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
 		},
 		change: function (event, ui) {
 			update();
@@ -116,11 +119,13 @@ $(document).ready(function () {
 		$("#canvas3").attr("width", canvasWidth);
 		$("#canvas4").attr("width", canvasWidth);
 		$("#canvas5").attr("width", canvasWidth);
+		$("#canvas6").attr("width", canvasWidth);
 		$("#canvas1").attr("height", canvasHeight);
 		$("#canvas2").attr("height", canvasHeight);
 		$("#canvas3").attr("height", canvasHeight);
 		$("#canvas4").attr("height", canvasHeight);
 		$("#canvas5").attr("height", canvasHeight);
+		$("#canvas6").attr("height", canvasHeight);
 
 		// 入力画像の描画
 		context1.drawImage(img, 0, 0, canvasWidth, canvasHeight);
@@ -130,8 +135,10 @@ $(document).ready(function () {
 		mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
 		// 倍化
 		roughen(context3, context4, canvasWidth, canvasHeight);
+		// マニフォルドネス復帰
+		recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
 		// 輪郭追跡結果
-		var boundary = mycontourDetection(context4, context5, canvasWidth, canvasHeight);
+		var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
 
 		/*
 		console.log(boundary);
@@ -295,17 +302,113 @@ function mybinarization(contextIn, contextOut, width, height, threshold) {
 }
 
 
+function recoverManifoldness(contextIn, contextOut, width, height) {
+	var imgDataIn = contextIn.getImageData(0, 0, width, height);
+	// 出力に入力と同じ画像を描画しておく
+	// 修正すべき部分だけ後で修正する
+	contextOut.putImageData(imgDataIn, 0, 0);
+	var imgDataOut = contextOut.getImageData(0, 0, width, height);
+	// 読み取り用ピクセルデータ（書き換えない）
+	var pixelDataIn = new Array(width);
+	for(var wi = 0; wi < width; ++wi) {
+		pixelDataIn[wi] = new Array(height);
+		for(var hi = 0; hi < height; ++hi) {
+			pixelDataIn[wi][hi] = imgDataIn.data[4 * (width * hi + wi)];
+		}
+	}
+	// あるピクセルを * で表し、
+	// 周囲のピクセルを下のように番号を付けて表す
+	// 3 2 1
+	// 4 * 0
+	// 5 6 7
+	// Freeman's chain code
+	var chainCode = [
+	[1, 0], [1, -1], [0, -1], [-1, -1],
+	[-1, 0], [-1, 1], [0, 1], [1, 1]
+	];
+	var black = 0;
+	var white = 255;
+	// 四隅とその隣のピクセルにアクセスするインデックス配列
+	var cornerIndices = [[2, 1, 0], [0, 7, 6], [6, 5, 4], [4, 3, 2]];
+	for(var hi = 0; hi < height; ++hi) {
+		for(var wi = 0; wi < width; ++wi) {
+			// ピクセルが黒ならば何もしない
+			if(pixelDataIn[wi][hi] == black) {
+				continue;
+			}
+			// 四隅の黒・白・黒チェック
+			var is_black_white_black = false;
+			for(var ci = 0; ci < 4; ++ci) {
+				var px_values = new Array(3);
+				var is_out_of_range = false;
+				for(var cj = 0; cj < 3; ++cj) {
+					var x_check = wi + chainCode[cornerIndices[ci][cj]][0];
+					var y_check = hi + chainCode[cornerIndices[ci][cj]][1];
+					// チェックするピクセルが画像の範囲外ならば
+					// そのコーナーは調べなくてよい
+					if(x_check < 0 || x_check >= width || y_check < 0 || y_check >= height) {
+						is_out_of_range = true;
+						break;
+					}
+					px_values[cj] = pixelDataIn[x_check][y_check];
+				}
+				if(is_out_of_range) {
+					continue;
+				}
+				if(
+					px_values[0] == black
+					&& px_values[1] == white
+					&& px_values[2] == black
+					) {
+					imgDataOut.data[4 * (width * hi + wi) + 0] = 0;
+					imgDataOut.data[4 * (width * hi + wi) + 1] = 0;
+					imgDataOut.data[4 * (width * hi + wi) + 2] = 0;
+					imgDataOut.data[4 * (width * hi + wi) + 3] = 255;
+					break;
+				}
+			}
+		}
+	}
+	contextOut.putImageData(imgDataOut, 0, 0);
+}
+
+// 画像を荒くする
+// ローカル変数の dotsize (整数値) で粗さを指定する．大きいほど荒い．
+// contextInは二値化画像であることを想定する
+// dotsizeで指定したピクセル数の正方形の中で白or黒の多数派にすべて染める
 function roughen(contextIn, contextOut, width, height) {
 	var imgDataIn = contextIn.getImageData(0, 0, width, height);
 	var imgDataOut = contextOut.getImageData(0, 0, width, height);
-	var dotsize = 2;
+	var dotsize = 3;
 	for(var wi = 0; wi < width/dotsize; ++wi) {
 		for(var hi = 0; hi < height / dotsize; ++hi) {
+			var sum_color = 0;
+			var num_pixel_out_of_range = 0;
 			for(var dwi = 0; dwi < dotsize; ++dwi) {
 				for(var dhi = 0; dhi < dotsize; ++dhi) {
-					for(var i = 0; i < 4; ++i) {
-						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + i]
-							= imgDataIn.data[4 * (width * dotsize * hi + dotsize * wi) + i];
+					if(dotsize * hi + dhi < height && dotsize * wi + dwi < width) {
+						sum_color += imgDataIn.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi)];
+					} else {
+						++num_pixel_out_of_range;
+					}
+				}
+			}
+			for(var dwi = 0; dwi < dotsize; ++dwi) {
+				for(var dhi = 0; dhi < dotsize; ++dhi) {
+					// out of range の時　何もしない
+					if(dotsize * hi + dhi >= height || dotsize * wi + dwi >= width) {
+						continue;
+					}
+					if(sum_color >= 255 * (dotsize * dotsize - num_pixel_out_of_range) / 2) {
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 0] = 255;
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 1] = 255;
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 2] = 255;
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 3] = 255;
+					} else {
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 0] = 0;
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 1] = 0;
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 2] = 0;
+						imgDataOut.data[4 * (width * (dotsize * hi + dhi) + dotsize * wi + dwi) + 3] = 255;
 					}
 				}
 			}
