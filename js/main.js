@@ -19,6 +19,13 @@ var cutoff = 240;
 
 $(document).ready(function () {
 
+	// Check for the various File API support.
+	if (window.File && window.FileReader && window.FileList && window.Blob) {
+		// Great success! All the File APIs are supported.
+	} else {
+		alert('The File APIs are not fully supported in this browser.');
+	}
+
 	var context1 = $("#canvas1").get(0).getContext("2d");
 	var context2 = $("#canvas2").get(0).getContext("2d");
 	var context3 = $("#canvas3").get(0).getContext("2d");
@@ -96,6 +103,39 @@ $(document).ready(function () {
 		// ファイルを読み込み、データをBase64でエンコードされたデータURLにして返す
 		reader.readAsDataURL(file);
 	});
+
+
+
+	function handleFileSelect(evt) {
+		evt.stopPropagation();
+		evt.preventDefault();
+		var files = evt.dataTransfer.files; // FileList object.
+		var file = files[0];
+		// 画像ファイル以外は処理中止
+		if(!file.type.match(/^image\/(png|jpeg|gif|bmp)$/)) return;
+		var reader = new FileReader();
+		// File APIを使用し、ローカルファイルを読み込む
+		reader.onload = function (evt) {
+			// 画像のURLをソースに設定
+			img.src = evt.target.result;
+		}
+		// ファイルを読み込み、データをBase64でエンコードされたデータURLにして返す
+		reader.readAsDataURL(file);
+	}
+
+	function handleDragOver(evt) {
+		evt.stopPropagation();
+		evt.preventDefault();
+		evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+	}
+
+	// Setup the dnd listeners.
+	var dropZone = document.getElementById('page');
+	dropZone.addEventListener('dragover', handleDragOver, false);
+	dropZone.addEventListener('drop', handleFileSelect, false);
+
+
+
 
 	img.onload = function () {
 
