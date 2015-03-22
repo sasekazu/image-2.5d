@@ -7,12 +7,6 @@
 // スケーリング変数
 var mmperpixel = 0.15;
 
-// 画像描画関係
-var dx;
-var dy;
-var dw;
-var dh;
-
 // 二値化閾値
 var cutoff = 240;
 
@@ -56,15 +50,23 @@ $(document).ready(function () {
 		slide: function (event, ui) {
 			cutoff = ui.value;
 			document.getElementById('imgThresioldSpan').innerHTML = cutoff;
-			// 二値化
-			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
-			// 倍化
-			roughen(context3, context4, canvasWidth, canvasHeight, 3);
-			// マニフォルドネス復帰
-			recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
+
+			var mode = $("input[name='radio']:checked").val();
+			if(mode == 'fine') {
+				// 二値化
+				mybinarization(context2, context5, canvasWidth, canvasHeight, cutoff);
+			} else if(mode == 'coarse') {
+				// 二値化
+				mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
+				// 倍化
+				roughen(context3, context4, canvasWidth, canvasHeight, 3);
+				// マニフォルドネス復帰
+				recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
+			}
+
 		},
 		change: function (event, ui) {
-			update();
+			generateMesh();
 		}
 	});
 	document.getElementById('imgThresioldSpan').innerHTML = cutoff;
@@ -86,9 +88,7 @@ $(document).ready(function () {
 	/////////////////////////////////
 	// 画像の読み込み
 	//////////////////////////////////
-
 	var img = new Image();
-
 	$("#uploadFile").change(function () {
 		// 選択されたファイルを取得
 		var file=this.files[0];
@@ -103,7 +103,6 @@ $(document).ready(function () {
 		// ファイルを読み込み、データをBase64でエンコードされたデータURLにして返す
 		reader.readAsDataURL(file);
 	});
-
 	function handleFileSelect(evt) {
 		evt.stopPropagation();
 		evt.preventDefault();
@@ -120,31 +119,30 @@ $(document).ready(function () {
 		// ファイルを読み込み、データをBase64でエンコードされたデータURLにして返す
 		reader.readAsDataURL(file);
 	}
-
 	function handleDragOver(evt) {
 		evt.stopPropagation();
 		evt.preventDefault();
 		evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 	}
-
 	// Setup the dnd listeners.
 	var dropZone = document.getElementById('page');
 	dropZone.addEventListener('dragover', handleDragOver, false);
 	dropZone.addEventListener('drop', handleFileSelect, false);
 
-
 	img.onload = function () {
-
-		update();
-
+		generateMesh();
 	}
+
+
+	function generateMesh() {
+		$.blockUI();
+		setTimeout(update, 1000);
+	}
+
 
 	function update() {
 
-		dx = 0;
-		dy = 0;
-		dw = img.width;
-		dh = img.height;
+		mode = $("input[name='radio']:checked").val();
 
 		// キャンバスサイズ変更
 		var size_fixed = 300;
@@ -155,6 +153,8 @@ $(document).ready(function () {
 		}
 		canvasWidth = Math.floor(scale * img.width);
 		canvasHeight = Math.floor(scale * img.height);
+		canvasWidth = size_fixed;
+		canvasHeight = size_fixed;
 		canvas.attr("width", canvasWidth);
 		canvas.attr("height", canvasHeight);
 
@@ -172,28 +172,43 @@ $(document).ready(function () {
 		$("#canvas6").attr("height", canvasHeight);
 
 		// 入力画像の描画
-		context1.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+		context1.drawImage(img, 0, 0, scale*img.width, scale*img.height);
 		// グレースケール化
 		mygrayScale(context1, context2, canvasWidth, canvasHeight);
-		// 二値化
-		mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
-		// 倍化
-		roughen(context3, context4, canvasWidth, canvasHeight, 3);
-		// マニフォルドネス復帰
-		recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
-		// 輪郭追跡結果
-		var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
 
-		cdtResult = cdt(boundary, [], { merge: true, softConstraint: true, cutoffLength: 0 });
+
+		var cutoffLength;
+
+		if(mode == 'fine') {
+			// 二値化
+			mybinarization(context2, context5, canvasWidth, canvasHeight, cutoff);
+			// 輪郭追跡結果
+			var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
+			var cutoffLength = 2;
+		} else if(mode == 'coarse') {
+			// 二値化
+			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
+			// 倍化
+			roughen(context3, context4, canvasWidth, canvasHeight, 3);
+			// マニフォルドネス復帰
+			recoverManifoldness(context4, context5, canvasWidth, canvasHeight);
+			// 輪郭追跡結果
+			var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
+			var cutoffLength = 0;
+		}
+
+		cdtResult = cdt(boundary, [], { merge: true, softConstraint: true, cutoffLength: cutoffLength});
 
 		var tri = cdtResult.connectivity;
 		var points = cdtResult.points;
+		var refContext = context5;
 		trueTri = [];
 		for(var i = 0; i < tri.length; ++i) {
 			var triCenter = numeric.add(points[tri[i][0]], points[tri[i][1]]);
 			triCenter = numeric.add(triCenter, points[tri[i][2]]);
 			triCenter = numeric.div(triCenter, 3);
-			if(isPointBlack(triCenter, context4, canvasWidth, canvasHeight)) {
+
+			if(isPointBlack(triCenter, refContext, canvasWidth, canvasHeight)) {
 				trueTri.push(tri[i]);
 			}
 		}
@@ -217,8 +232,6 @@ $(document).ready(function () {
 			drawTriS(context, points[tri[0]], points[tri[1]], points[tri[2]]);
 		}
 
-
-
 		mesh25d = new Mesh25d(cdtResult.points, trueTri);
 
 		// webglオブジェクトが存在する場合削除
@@ -228,32 +241,33 @@ $(document).ready(function () {
 			oyadom.removeChild(webglOldDom);
 		}
 
-		return;
+		$.unblockUI();
+
 
 		var v = $("#thicknessBox").val();
 		var thickness = Number(v);
 		var vert = mesh25d.getPos(mmperpixel, thickness);
-		renderWebGL(canvasWidth, canvasHeight, mesh25d.modelLength, mesh25d.modelTop, mesh25d.modelBottom, vert, mesh25d.tri);
+		//renderWebGL(canvasWidth, canvasHeight, mesh25d.modelLength, mesh25d.modelTop, mesh25d.modelBottom, vert, mesh25d.tri);
+		threeTrackball('container', canvasWidth, canvasHeight, vert, mesh25d.tri);
+
+
+		// ダウンロードリンクの構成
+		$('#downloadLink').hide();
+		var v = $("#thicknessBox").val();
+		var thickness = Number(v);
+		var text = mesh25d.makeStl(mmperpixel, thickness);
+		var blob = new Blob([text], { "type": "text/html" });
+		var a = document.getElementById('downloadLink');
+		a.setAttribute('href', window.URL.createObjectURL(blob));
+		a.setAttribute('download', '3d-model.stl');
+		$('#downloadLink').show('slow');
+
 	}
 
 
 	img.onerror=function(){
 		alert("画像が読み込めません");
 	}
-
-	// 保存ボタン
-	$("#saveButton").click(function(){
-		// ダウンロードリンクの構成
-		$('#downloadLink').hide();
-		var v = $("#thicknessBox").val();
-		var thickness = Number(v);
-		var text = mesh25d.makeStl(mmperpixel, thickness);
-		var blob = new Blob([text],{"type" : "text/html"});
-		var a = document.getElementById('downloadLink');
-		a.setAttribute('href', window.URL.createObjectURL(blob));
-		a.setAttribute('download', '3d-model.stl');
-		$('#downloadLink').show('slow');
-	});
 
 } );
 
@@ -588,4 +602,26 @@ function fileSave(text, filename) {
 	newElement.setAttribute('href', window.URL.createObjectURL(blob));
 	newElement.setAttribute('download', filename);
 	document.body.appendChild(newElement);
+}
+
+
+
+
+// 三角形を描画する関数
+// 引数は物理座標の２次元ベクトル
+function drawTri(context, p1, p2, p3) {
+	context.beginPath();
+	context.moveTo(p1[0], p1[1]);
+	context.lineTo(p2[0], p2[1]);
+	context.lineTo(p3[0], p3[1]);
+	context.closePath();
+	context.fill();
+}
+function drawTriS(context, p1, p2, p3) {
+	context.beginPath();
+	context.moveTo(p1[0], p1[1]);
+	context.lineTo(p2[0], p2[1]);
+	context.lineTo(p3[0], p3[1]);
+	context.closePath();
+	context.stroke();
 }

@@ -9,15 +9,19 @@
 	<link rel="stylesheet" type="text/css" href="css/index.css" />
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="js/jquery.blockUI.js"></script>
 	<!--	<script type="text/javascript" src="js/cdt-0.1.min.js"></script> -->
-	<!--	<script type="text/javascript" src="https://raw.githubusercontent.com/sasekazu/cdt.js/master/src/cdt.js"></script> -->
-	<script type="text/javascript" src="../cdt.js/src/cdt.js"></script>
+		<script type="text/javascript" src="https://raw.githubusercontent.com/sasekazu/cdt.js/master/src/cdt.js"></script> 
+	<!--<script type="text/javascript" src="../cdt.js/src/cdt.js"></script>-->
 	<script type="text/javascript" src="js/numeric-1.2.6.min.js"></script>
 	<script type="text/javascript" src="js/Mesh25d.js"></script>
-	<script type="text/javascript" src="js/drawFunc.js"></script>
-	<script type="text/javascript" src="js/three.min.js"></script>
-	<script type="text/javascript" src="js/webgl.js"></script>
-	<script type="text/javascript" src="js/imageProcessing.js"></script>
+
+	<script src="js/three.js/three.min.js"></script>
+	<script src="js/three.js/TrackballControls.js"></script>
+	<script src="js/three.js/Detector.js"></script>
+	<script src="js/three.js/stats.min.js"></script>
+	<script src="js/three-trackball.js"></script>
+
 	<script type="text/javascript" src="js/main.js"></script>
 </head>
 <body>
@@ -27,13 +31,19 @@
 			<div id="topBox">
 				<p id="appP">
 					<a href="index.html"><span id="appTitle">Image to 3d</span></a>
-					<span id="concept">画像ファイルをドラッグアンドドロップして，黒い部分を押し出して3Dモデルを生成</span>
+					<span id="concept">Convert an image into a STL file. Drag and drop an image file.</span>
 				</p>
 			</div><!-- 終了 #topBox --->
 		</header>
 		<div id="pageBody">
 			<div id="menuBox">
 				<div id="detail">
+					<div class="settingItem">
+						<p class="settingCaption">
+							<label><input type="radio" name="radio" value="fine" checked="checked"> Fine</label>
+							<label><input type="radio" name="radio" value="coarse"> Coarse</label>
+						</p>
+					</div>
 					<div class="settingItem">
 						<p class="settingCaption">Thickness</p>
 						<p class="settingMemo"><input id="thicknessBox" type="text" value="5" name="thickness"><span> [mm]</span></p>
@@ -48,7 +58,6 @@
 					</div>
 				</div><!-- 終了 #detail -->
 				<div id="saveDiv">
-					<input class="funcButton" id="saveButton" value="Generate 3D" type="button" />
 					<a class="funcButton" id="downloadLink">Download</a>
 				</div><!-- 終了 #saveDiv -->
 			</div><!-- 終了 #menuBox -->
@@ -58,11 +67,12 @@
 					<canvas id="canvas1" style="display: none"></canvas>
 					<canvas id="canvas2" style="display: none"></canvas>
 					<canvas id="canvas3" style="display: none"></canvas>
-					<canvas id="canvas4"></canvas>
-					<canvas id="canvas5" style="display: none"></canvas>
+					<canvas id="canvas4" style="display: none"></canvas>
+					<canvas id="canvas5"></canvas>
 					<canvas id="canvas6" style="display: none"></canvas>
-					<canvas id="mViewCanvas" width="100" height="100"></canvas>
+					<canvas id="mViewCanvas" width="100" height="100" style="display: none"></canvas>
 				</div>
+				<div id="container"></div>
 				<div id="webglBox"></div>
 			</div><!-- 終了 #centerBox -->
 

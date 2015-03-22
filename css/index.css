@@ -40,6 +40,13 @@ body{
 	padding: 0px;
 }
 
+#viewerBox{
+	float: left;
+}
+
+#container{
+}
+
 #menuBox{
 	float: left;
 	width: 205px;
