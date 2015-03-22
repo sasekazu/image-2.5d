@@ -6,7 +6,7 @@ function threeTrackball(containerID, width, height, vertices, face) {
 	while(child = oyadom.lastChild) oyadom.removeChild(child);
 
 	if(!Detector.webgl) Detector.addGetWebGLMessage();
-	var container, stats;
+	var container;
 	var camera, controls, scene, renderer;
 	var cross;
 	init();
@@ -14,11 +14,11 @@ function threeTrackball(containerID, width, height, vertices, face) {
 	function init() {
 		container = document.getElementById(containerID);
 		camera = new THREE.PerspectiveCamera(60, width / height, 1, 1000);
-		camera.position.z = 50;
+		camera.position.z = 40;
 		controls = new THREE.TrackballControls(camera, container);
 		controls.rotateSpeed = 10.0;
-		controls.zoomSpeed = 10.0;
-		controls.panSpeed = 10.0;
+		controls.zoomSpeed = 2.0;
+		controls.panSpeed = 2.0;
 		controls.noZoom = false;
 		controls.noPan = false;
 		controls.staticMoving = true;
@@ -27,7 +27,7 @@ function threeTrackball(containerID, width, height, vertices, face) {
 		controls.addEventListener('change', render);
 		// world
 		scene = new THREE.Scene();
-		scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
+		scene.fog = new THREE.FogExp2(0xeeeeee, 0.002);
 
 		var geometry = new THREE.Geometry();
 		for(var i = 0; i < vertices.length; i++) {
@@ -62,11 +62,6 @@ function threeTrackball(containerID, width, height, vertices, face) {
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(width, height);
 		container.appendChild(renderer.domElement);
-		stats = new Stats();
-		stats.domElement.style.position = 'absolute';
-		stats.domElement.style.top = '0px';
-		stats.domElement.style.zIndex = 100;
-		//container.appendChild(stats.domElement);
 		//
 		window.addEventListener('resize', onWindowResize, false);
 		//
@@ -85,7 +80,6 @@ function threeTrackball(containerID, width, height, vertices, face) {
 	}
 	function render() {
 		renderer.render(scene, camera);
-		stats.update();
 	}
 
 }

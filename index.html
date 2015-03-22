@@ -39,18 +39,12 @@
 			<div id="menuBox">
 				<div id="detail">
 					<div class="settingItem">
-						<p class="settingCaption">
-							<label><input type="radio" name="radio" value="fine" checked="checked"> Fine</label>
-							<label><input type="radio" name="radio" value="coarse"> Coarse</label>
-						</p>
+						<p class="settingCaption">Thresiold: <span id="imgThresioldSpan"></span></p>
+						<div id="imgThresioldSlider"></div>
 					</div>
 					<div class="settingItem">
 						<p class="settingCaption">Thickness</p>
-						<p class="settingMemo"><input id="thicknessBox" type="text" value="5" name="thickness"><span> [mm]</span></p>
-					</div>
-					<div class="settingItem">
-						<p class="settingCaption">Thresiold: <span id="imgThresioldSpan"></span></p>
-						<div id="imgThresioldSlider"></div>
+						<p class="settingMemo"><input id="thicknessBox" type="text" value="1" name="thickness"><span> [mm]</span></p>
 					</div>
 					<div class="settingItem">
 						<p class="settingCaption">Scale: <span id="scaleSpan"></span> [mm/px]</p>
@@ -66,18 +60,17 @@
 				<div id="viewerBox">
 					<canvas id="canvas1" style="display: none"></canvas>
 					<canvas id="canvas2" style="display: none"></canvas>
-					<canvas id="canvas3" style="display: none"></canvas>
+					<canvas id="canvas3"></canvas>
 					<canvas id="canvas4" style="display: none"></canvas>
-					<canvas id="canvas5"></canvas>
-					<canvas id="canvas6" style="display: none"></canvas>
-					<canvas id="mViewCanvas" width="100" height="100" style="display: none"></canvas>
 				</div>
 				<div id="container"></div>
-				<div id="webglBox"></div>
 			</div><!-- 終了 #centerBox -->
 
 		</div><!-- 終了 #pageBody -->
 
 	</div><!-- 終了 #page -->
+	<footer style="text-align: center;">
+		<a href="http://www.sasekazu.info">sasekazu.info</a>
+	</footer>
 </body>
 </html>
