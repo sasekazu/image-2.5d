@@ -3,81 +3,68 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<meta charset="utf-8">
-	<title>Img 2.5d</title>
+	<title>Image to 3d</title>
 	<link rel="stylesheet" type="text/css" href="css/normalize.css" />
 	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/smoothness/jquery-ui.css" />
 	<link rel="stylesheet" type="text/css" href="css/index.css" />
-
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
-	<!-- グローバル変数 -->
-	<script type="text/javascript" src="js/parameters.js"></script>
-	<!-- メッシュ生成関係 -->
-<!--	<script type="text/javascript" src="js/cdt-0.1.min.js"></script> -->
-<!--	<script type="text/javascript" src="https://raw.githubusercontent.com/sasekazu/cdt.js/master/src/cdt.js"></script> -->
-	<script type="text/javascript" src="../cdt.js/src/cdt.js"></script> 
+	<!--	<script type="text/javascript" src="js/cdt-0.1.min.js"></script> -->
+	<!--	<script type="text/javascript" src="https://raw.githubusercontent.com/sasekazu/cdt.js/master/src/cdt.js"></script> -->
+	<script type="text/javascript" src="../cdt.js/src/cdt.js"></script>
 	<script type="text/javascript" src="js/numeric-1.2.6.min.js"></script>
 	<script type="text/javascript" src="js/Mesh25d.js"></script>
 	<script type="text/javascript" src="js/drawFunc.js"></script>
-	<!-- WebGL関係 -->
-	<script src="js/three.min.js"></script>
+	<script type="text/javascript" src="js/three.min.js"></script>
 	<script type="text/javascript" src="js/webgl.js"></script>
-	<!-- 画像処理関係 -->
 	<script type="text/javascript" src="js/imageProcessing.js"></script>
-	<!-- メイン処理 -->
 	<script type="text/javascript" src="js/main.js"></script>
-
-
 </head>
 <body>
 
 	<div id="page" style="background-color: lightgray;">
 		<header>
 			<div id="topBox">
-				<p id="appP"><a href="index.html"><span id="appTitle">Img 2.5d</span></a>
-					<span id="concept">輪郭線から3Dデータ（STL形式）を作成</span>
-				</p>			
+				<p id="appP">
+					<a href="index.html"><span id="appTitle">Image to 3d</span></a>
+					<span id="concept">画像ファイルをドラッグアンドドロップして，黒い部分を押し出して3Dモデルを生成</span>
+				</p>
 			</div><!-- 終了 #topBox --->
 		</header>
-
 		<div id="pageBody">
+			<div id="menuBox">
+				<div id="detail">
+					<div class="settingItem">
+						<p class="settingCaption">Thickness</p>
+						<p class="settingMemo"><input id="thicknessBox" type="text" value="5" name="thickness"><span> [mm]</span></p>
+					</div>
+					<div class="settingItem">
+						<p class="settingCaption">Thresiold: <span id="imgThresioldSpan"></span></p>
+						<div id="imgThresioldSlider"></div>
+					</div>
+					<div class="settingItem">
+						<p class="settingCaption">Scale: <span id="scaleSpan"></span> [mm/px]</p>
+						<div id="scaleSlider"></div>
+					</div>
+				</div><!-- 終了 #detail -->
+				<div id="saveDiv">
+					<input class="funcButton" id="saveButton" value="Generate 3D" type="button" />
+					<a class="funcButton" id="downloadLink">Download</a>
+				</div><!-- 終了 #saveDiv -->
+			</div><!-- 終了 #menuBox -->
 
-		<div id="menuBox">
-			<div id="saveDiv">
-				<input class="funcButton" id="saveButton" value="5. 保存　　　　" type="button" />
-				<div id="downloadDiv">
-					<a id="downloadLink">厚み <span id="thicknessDownload"></span> [mm] の3Dデータをダウンロード</a>
+			<div id="centerBox">
+				<div id="viewerBox">
+					<canvas id="canvas1" style="display: none"></canvas>
+					<canvas id="canvas2" style="display: none"></canvas>
+					<canvas id="canvas3" style="display: none"></canvas>
+					<canvas id="canvas4"></canvas>
+					<canvas id="canvas5" style="display: none"></canvas>
+					<canvas id="canvas6" style="display: none"></canvas>
+					<canvas id="mViewCanvas" width="100" height="100"></canvas>
 				</div>
-			</div><!-- 終了 #saveDiv -->
-			<div id="detail">
-				<div class="settingItem">
-					<p class="settingCaption">厚み</p>
-					<p class="settingMemo"><input id="thicknessBox" type="text" value="5" name="thickness"><span>[mm]</span> 「保存」ボタンを押したときに反映される．</p>
-				</div>
-				<div class="settingItem">
-					<p class="settingCaption">二値化の閾値: <span id="imgThresioldSpan"></span> [px]</p>
-					<div id="imgThresioldSlider"></div>
-				</div>
-				<div class="settingItem">
-					<p class="settingCaption">出力スケール: <span id="scaleSpan"></span> [mm/px]</p>
-					<div id="scaleSlider"></div>
-					<p class="settingMemo">※保存時に参照されるパラメータ．グリッド1マスが10mmになるような3Dデータが作成される．</p>
-				</div>
-			</div><!-- 終了 #detail -->
-		</div><!-- 終了 #menuBox -->
-
-
-		<div id="centerBox">
-			<div id="viewerBox">
-			<canvas id="canvas1"></canvas>
-			<canvas id="canvas2" style="display: none"></canvas>
-			<canvas id="canvas3"></canvas>
-				<canvas id="canvas4"></canvas>
-				<canvas id="canvas5"></canvas>
-				<canvas id="canvas6"></canvas>
-			<canvas id="mViewCanvas" width="100" height="100"></canvas></div>
-			<div id="webglBox"></div>
-		</div><!-- 終了 #centerBox -->
+				<div id="webglBox"></div>
+			</div><!-- 終了 #centerBox -->
 
 		</div><!-- 終了 #pageBody -->
 

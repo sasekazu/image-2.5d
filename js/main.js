@@ -104,8 +104,6 @@ $(document).ready(function () {
 		reader.readAsDataURL(file);
 	});
 
-
-
 	function handleFileSelect(evt) {
 		evt.stopPropagation();
 		evt.preventDefault();
@@ -135,8 +133,6 @@ $(document).ready(function () {
 	dropZone.addEventListener('drop', handleFileSelect, false);
 
 
-
-
 	img.onload = function () {
 
 		update();
@@ -144,7 +140,12 @@ $(document).ready(function () {
 	}
 
 	function update() {
-		calcImgParameters();
+
+		dx = 0;
+		dy = 0;
+		dw = img.width;
+		dh = img.height;
+
 		// キャンバスサイズ変更
 		var size_fixed = 300;
 		if(img.width > img.height) {
@@ -183,41 +184,6 @@ $(document).ready(function () {
 		// 輪郭追跡結果
 		var boundary = mycontourDetection(context5, context6, canvasWidth, canvasHeight);
 
-
-		/*
-		console.log(boundary);
-		var str = '[';
-		for(var i = 0; i < boundary.length; ++i) {
-			str += '[';
-			for(var j = 0; j < boundary[i].length; ++j) {
-				str += '[' + boundary[i][j][0] + ', ' + boundary[i][j][1] + '], ';
-			}
-			str += '], \n';
-		}
-		str += ']';
-		fileSave(str, 'boundary.txt');
-		*/
-		/*
-		trueTri = null;
-		var culledBoundary = [];
-		for(var bi = 0; bi < boundary.length; ++bi) {
-			var boundaryToBeAdded = [];
-			var len = boundary[bi].length;
-			var ZERO = 1e-1;
-			for(var bj = 0; bj < len; ++bj) {
-				var v1 = cdt.sub(boundary[bi][bj], boundary[bi][(bj+len-1)%len]);
-				v1 = cdt.div(v1, cdt.norm2(v1));
-				var v2 = cdt.sub(boundary[bi][(bj+1)%len], boundary[bi][(bj+len-1)%len]);
-				v2 = cdt.div(v2, cdt.norm2(v2));
-				if(Math.abs(v1[0] * v2[0] + v2[1] * v2[1] - 1) > ZERO) {
-					boundaryToBeAdded.push(boundary[bi][bj]);
-				}
-			}
-			culledBoundary.push(boundaryToBeAdded);
-		}
-		boundary = cdt.clone(culledBoundary);
-		*/
-
 		cdtResult = cdt(boundary, [], { merge: true, softConstraint: true, cutoffLength: 0 });
 
 		var tri = cdtResult.connectivity;
@@ -237,13 +203,30 @@ $(document).ready(function () {
 			return (imgData.data[4 * (width * pPx[1] + pPx[0])] < 100);
 		}
 
-		meshCompleteFunc();
+
+		// メッシュの描画
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.clearRect(0, 0, 2 * canvasWidth, 2 * canvasHeight);
+		context.strokeStyle = 'gray';
+		context.fillStyle = 'lightblue';
+		var points = cdtResult.points;
+		var conn = trueTri;
+		for(var i = 0; i < conn.length; ++i) {
+			var tri = [conn[i][0], conn[i][1], conn[i][2]];
+			drawTri(context, points[tri[0]], points[tri[1]], points[tri[2]]);
+			drawTriS(context, points[tri[0]], points[tri[1]], points[tri[2]]);
+		}
 
 
 
 		mesh25d = new Mesh25d(cdtResult.points, trueTri);
 
-		hideAndRemoveSaveEle();
+		// webglオブジェクトが存在する場合削除
+		var oyadom = document.getElementById('webglBox');
+		var webglOldDom = document.getElementById('webgl');
+		if(webglOldDom) {
+			oyadom.removeChild(webglOldDom);
+		}
 
 		return;
 
@@ -253,46 +236,15 @@ $(document).ready(function () {
 		renderWebGL(canvasWidth, canvasHeight, mesh25d.modelLength, mesh25d.modelTop, mesh25d.modelBottom, vert, mesh25d.tri);
 	}
 
-	calcImgParameters = function(){
-		dx=0;
-		dy=0;
-		dw=img.width;
-		dh=img.height;
-	}
 
 	img.onerror=function(){
 		alert("画像が読み込めません");
 	}
 
-	//////////////////////////////////////////////////////////
-	//////  メッシュ生成完了後の描画処理
-	//////////////////////////////////////////////////////
-	function meshCompleteFunc() {
-		// 描画リセット
-		context.setTransform(1, 0, 0, 1, 0, 0);
-		context.clearRect(0, 0, 2* canvasWidth, 2*canvasHeight);
-		// メッシュの描画
-		///context.strokeStyle='gray';
-		context.strokeStyle='gray';
-		context.fillStyle='lightblue';
-		//context.globalAlpha = 0.7;
-		var points = cdtResult.points;
-		var conn = trueTri;
-		for(var i=0; i<conn.length; ++i) {
-			var tri=[conn[i][0], conn[i][1], conn[i][2]];
-			drawTri(context, points[tri[0]], points[tri[1]], points[tri[2]]);
-			drawTriS(context, points[tri[0]], points[tri[1]], points[tri[2]]);
-		}
-		//context.globalAlpha = 1.0;
-	}
-
-	//////////////////////////////////////////////////////////
-	//////  イベント処理
-	//////////////////////////////////////////////////////
 	// 保存ボタン
 	$("#saveButton").click(function(){
 		// ダウンロードリンクの構成
-		$('#downloadDiv').hide();
+		$('#downloadLink').hide();
 		var v = $("#thicknessBox").val();
 		var thickness = Number(v);
 		var text = mesh25d.makeStl(mmperpixel, thickness);
@@ -300,18 +252,8 @@ $(document).ready(function () {
 		var a = document.getElementById('downloadLink');
 		a.setAttribute('href', window.URL.createObjectURL(blob));
 		a.setAttribute('download', '3d-model.stl');
-		document.getElementById('thicknessDownload').innerHTML=thickness;
-		$('#downloadDiv').show('slow');
+		$('#downloadLink').show('slow');
 	});
-
-	function hideAndRemoveSaveEle() {
-		// webglオブジェクトが存在する場合削除
-		var oyadom = document.getElementById('webglBox');
-		var webglOldDom = document.getElementById('webgl');
-		if(webglOldDom) {
-			oyadom.removeChild(webglOldDom);
-		}
-	}
 
 } );
 
