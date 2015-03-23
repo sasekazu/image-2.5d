@@ -34,7 +34,7 @@ $(document).ready(function () {
 	context3.font = "20px 'Arial'";
 	context3.textAlign = "center";
 	context3.textBaseline = "top";
-	context3.fillText('Drag & Drop', 150, 60);
+	context3.fillText('Drop a file here', 150, 60);
 
 	// スライダの初期化 出力スケーリング変数mmperpixel
 	$("#scaleSlider").slider({
