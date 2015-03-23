@@ -4,6 +4,9 @@
 
 $(document).ready(function () {
 
+	// 通常時のページカラー
+	var pageBackgroundColor = '#dddddd';
+
 	// スケーリング変数
 	var mmperpixel = 0.15;
 
@@ -27,6 +30,12 @@ $(document).ready(function () {
 	var context3 = $("#canvas3").get(0).getContext("2d");
 	var context4 = $("#canvas4").get(0).getContext("2d");
 
+	context3.fillStyle = "black";
+	context3.font = "20px 'Arial'";
+	context3.textAlign = "center";
+	context3.textBaseline = "top";
+	context3.fillText('Drag & Drop', 150, 60);
+
 	// スライダの初期化 出力スケーリング変数mmperpixel
 	$("#scaleSlider").slider({
 		min: 0.05,
@@ -36,6 +45,9 @@ $(document).ready(function () {
 		slide: function (event, ui) {
 			mmperpixel = ui.value;
 			document.getElementById('scaleSpan').innerHTML = mmperpixel;
+		},
+		change: function (event, ui) {
+			generateMesh();
 		}
 	});
 	document.getElementById('scaleSpan').innerHTML = mmperpixel;
@@ -50,10 +62,8 @@ $(document).ready(function () {
 		slide: function (event, ui) {
 			cutoff = ui.value;
 			document.getElementById('imgThresioldSpan').innerHTML = cutoff;
-
 			// 二値化
 			mybinarization(context2, context3, canvasWidth, canvasHeight, cutoff);
-
 		},
 		change: function (event, ui) {
 			generateMesh();
@@ -62,17 +72,12 @@ $(document).ready(function () {
 	document.getElementById('imgThresioldSpan').innerHTML = cutoff;
 
 
+	$('#thicknessBox').change(function () {
+		generateMesh();
+	});
+
 	// 画像の読み込み
 	var img = new Image();
-	$("#uploadFile").change(function () {
-		var file=this.files[0];
-		if(!file.type.match(/^image\/(png|jpeg|gif|bmp)$/)) return;
-		var reader=new FileReader();
-		reader.onload=function (evt) {
-			img.src=evt.target.result;
-		}
-		reader.readAsDataURL(file);
-	});
 	function handleFileSelect(evt) {
 		evt.stopPropagation();
 		evt.preventDefault();
@@ -84,7 +89,7 @@ $(document).ready(function () {
 			img.src = evt.target.result;
 		}
 		reader.readAsDataURL(file);
-		$('#page').css("background-color", 'lightgray');
+		$('#page').css("background-color", pageBackgroundColor);
 	}
 	function handleDragOver(evt) {
 		evt.stopPropagation();
@@ -95,7 +100,7 @@ $(document).ready(function () {
 		$('#page').css("background-color", 'gray');
 	}
 	function handleDragleave(evt) {
-		$('#page').css("background-color", 'lightgray');
+		$('#page').css("background-color", pageBackgroundColor);
 	}
 	// Setup the dnd listeners.
 	var dropZone = document.getElementById('page');
@@ -143,7 +148,12 @@ $(document).ready(function () {
 		// 輪郭追跡
 		var boundary = mycontourDetection(context3, context4, canvasWidth, canvasHeight);
 		// 三角形分割
-		var cdtResult = cdt(boundary, [], { merge: true, softConstraint: true, cutoffLength: 2});
+		var cdtResult = cdt(boundary, [], { merge: true, softConstraint: true, cutoffLength: 2 });
+		if(cdtResult == null) {
+			alert("Meshing failuer. Sorry (x_x；)");
+			$.unblockUI();
+			return null;
+		}
 
 		var tri = cdtResult.connectivity;
 		var points = cdtResult.points;
@@ -176,13 +186,15 @@ $(document).ready(function () {
 		var vert = mesh25d.getPos(mmperpixel, thickness);
 		threeTrackball('container', canvasWidth, canvasHeight, vert, mesh25d.tri);
 
+
 		$.unblockUI();
+
 
 		// ダウンロードリンクの生成
 		$('#downloadLink').hide();
 		var v = $("#thicknessBox").val();
 		var thickness = Number(v);
-		var text = mesh25d.makeStl(mmperpixel, thickness);
+		var text = mesh25d.makeStl(mmperpixel/scale, thickness);
 		var blob = new Blob([text], { "type": "text/html" });
 		var a = document.getElementById('downloadLink');
 		a.setAttribute('href', window.URL.createObjectURL(blob));

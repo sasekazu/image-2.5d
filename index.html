@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿<!--
+	GitHub https://github.com/sasekazu/image-2.5d
+-->
+<!DOCTYPE html>
 <html>
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -10,28 +13,26 @@
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="js/jquery.blockUI.js"></script>
-	<!--	<script type="text/javascript" src="js/cdt-0.1.min.js"></script> -->
-		<script type="text/javascript" src="https://raw.githubusercontent.com/sasekazu/cdt.js/master/src/cdt.js"></script> 
-	<!--<script type="text/javascript" src="../cdt.js/src/cdt.js"></script>-->
 	<script type="text/javascript" src="js/numeric-1.2.6.min.js"></script>
-	<script type="text/javascript" src="js/Mesh25d.js"></script>
 
 	<script src="js/three.js/three.min.js"></script>
 	<script src="js/three.js/TrackballControls.js"></script>
 	<script src="js/three.js/Detector.js"></script>
 	<script src="js/three.js/stats.min.js"></script>
-	<script src="js/three-trackball.js"></script>
 
+	<script src="js/three-trackball.js"></script>
+	<script type="text/javascript" src="https://raw.githubusercontent.com/sasekazu/cdt.js/master/src/cdt.js"></script>
+	<script type="text/javascript" src="js/Mesh25d.js"></script>
 	<script type="text/javascript" src="js/main.js"></script>
 </head>
 <body>
 
-	<div id="page" style="background-color: lightgray;">
+	<div id="page">
 		<header>
 			<div id="topBox">
 				<p id="appP">
 					<a href="index.html"><span id="appTitle">Image to 3d</span></a>
-					<span id="concept">Convert an image into a STL file. Drag and drop an image file.</span>
+					<span id="concept">Convert an image into a STL file.</span>
 				</p>
 			</div><!-- 終了 #topBox --->
 		</header>
@@ -44,7 +45,7 @@
 					</div>
 					<div class="settingItem">
 						<p class="settingCaption">Thickness</p>
-						<p class="settingMemo"><input id="thicknessBox" type="text" value="1" name="thickness"><span> [mm]</span></p>
+						<p class="settingMemo"><input id="thicknessBox" type="text" value="1" name="thickness"><span> [mm]</span> <input type="button" value="apply"/></p>
 					</div>
 					<div class="settingItem">
 						<p class="settingCaption">Scale: <span id="scaleSpan"></span> [mm/px]</p>

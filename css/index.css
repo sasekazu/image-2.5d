@@ -11,11 +11,16 @@ body{
 	font-family: "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
 }
 
+canvas{
+	width: 300px;
+	height: 300px;
+}
 
 #page{
 	width: 820px;
 	height: 380px;
 	margin: 0 auto;
+	background-color: #dddddd;
 }
 
 #topBox{
