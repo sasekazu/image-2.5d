@@ -162,13 +162,13 @@ Mesh25d.prototype.make3d = function () {
 	for(var i = 0; i < this.surEdge.length; i++) {
 		var tritmp1 = new Array(3);
 		tritmp1[0] = this.surEdge[i][0];
-		tritmp1[1] = this.surEdge[i][1];
-		tritmp1[2] = this.surEdge[i][0] + this.posNum2d;
+		tritmp1[1] = this.surEdge[i][0] + this.posNum2d;
+		tritmp1[2] = this.surEdge[i][1];
 		this.tri.push(tritmp1);
 		var tritmp2 = new Array(3);
 		tritmp2[0] = this.surEdge[i][0] + this.posNum2d;
-		tritmp2[2] = this.surEdge[i][1] + this.posNum2d;
-		tritmp2[1] = this.surEdge[i][1];
+		tritmp2[2] = this.surEdge[i][1];
+		tritmp2[1] = this.surEdge[i][1] + this.posNum2d;
 		this.tri.push(tritmp2);
 	}
 
